@@ -1,0 +1,172 @@
+{
+  "name": "AI Customer Support Chatbot",
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1BTpfbBX10eC57CWhEGT8tkySnHZneUP6UO_YC2nNmxQ",
+          "mode": "list",
+          "cachedResultName": "Customer Support Knowledge Base",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BTpfbBX10eC57CWhEGT8tkySnHZneUP6UO_YC2nNmxQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "FAQs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BTpfbBX10eC57CWhEGT8tkySnHZneUP6UO_YC2nNmxQ/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        192,
+        0
+      ],
+      "id": "2e133f51-3723-4d38-8337-c39a65bbb7a5",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "yEfGOgaz4naJ7ZeQ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "👋 Welcome to AI Customer Support!\n\nI'm your virtual assistant. Ask me anything about:\n- Orders\n- Payments\n- Returns\n- Delivery\n- Customer Support\n\nHow can I help you today?",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        16,
+        0
+      ],
+      "id": "60b4d5bd-03bd-4948-b7ce-461ebed93940",
+      "name": "When chat message received",
+      "webhookId": "0158d0fa-7063-4db4-b90a-4b2e466a80af"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('When chat message received').item.json.chatInput }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are a professional customer support AI chatbot.  Use the following FAQ knowledge base to answer customer questions:  {{ JSON.stringify($json.faqs) }}  Rules: 1. Answer only using the provided FAQs. 2. Give short and clear answers. 3. Never make up information. 4. If the answer is not available, reply exactly: UNRESOLVED. 5. Be polite and professional. 6. Reply in the same language as the customer."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        720,
+        0
+      ],
+      "id": "b8dee904-e516-4419-9638-d8fa291cef6c",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "options": {
+          "maxTokens": 1000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        1072,
+        0
+      ],
+      "id": "d3de5c02-7583-452f-be2c-dbd9aa99603d",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "GjbBURjazl0EFjuo",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "faqs",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        400,
+        0
+      ],
+      "id": "6f8016e4-bf5d-4108-87cb-c099de9fb55c",
+      "name": "Aggregate"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "a56a897f-e294-4c2e-aa17-3861c1553a28",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5df035b00b5adab951f7e2565790914362ff8d5eb9d3a5ef9f15da6e19399f32"
+  },
+  "nodeGroups": [],
+  "id": "mkMoDB1brVf5luLq",
+  "tags": []
+}
